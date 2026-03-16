@@ -36,32 +36,42 @@
     background: var(--white);
     color: var(--black);
     overflow-x: hidden;
-    cursor: none;
+    }
+  @media (hover: none) and (pointer: coarse) {
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none !important; }
   }
 
-  /* CUSTOM CURSOR */
-  .cursor {
-    position: fixed;
-    width: 8px; height: 8px;
-    background: var(--gold);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: transform 0.1s ease;
+  /* CUSTOM CURSOR — desktop only */
+  @media (hover: hover) and (pointer: fine) {
+    .cursor {
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      will-change: transform;
+      top: 0; left: 0;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      will-change: transform;
+      opacity: 0.6;
+      top: 0; left: 0;
+      transition: scale 0.15s ease, opacity 0.15s ease;
+    }
+    body { cursor: none; }
   }
-  .cursor-ring {
-    position: fixed;
-    width: 36px; height: 36px;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    transition: all 0.15s ease;
-    opacity: 0.6;
+  @media (hover: none) or (pointer: coarse) {
+    .cursor, .cursor-ring { display: none !important; }
+    body { cursor: auto; }
   }
-  body:hover .cursor { opacity: 1; }
 
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 3px; }
@@ -1456,22 +1466,27 @@
 </a>
 
 <script>
-  // CURSOR
-  const cursor = document.getElementById('cursor');
-  const ring = document.getElementById('cursorRing');
-  let mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-  function animateCursor() {
-    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
-    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
-    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-    requestAnimationFrame(animateCursor);
+  // CURSOR — desktop only
+  const isTouch = window.matchMedia('(hover: none) or (pointer: coarse)').matches;
+  if (!isTouch) {
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    cursor.style.left = '0'; cursor.style.top = '0';
+    ring.style.left = '0'; ring.style.top = '0';
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    function animateCursor() {
+      cursor.style.transform = `translate(calc(${mx}px - 50%), calc(${my}px - 50%))`;
+      rx += (mx - rx) * 0.22; ry += (my - ry) * 0.22;
+      ring.style.transform = `translate(calc(${rx}px - 50%), calc(${ry}px - 50%))`;
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+    document.querySelectorAll('a, button, .service-card, .review-card').forEach(el => {
+      el.addEventListener('mouseenter', () => { ring.style.scale = '1.8'; ring.style.opacity = '0.3'; });
+      el.addEventListener('mouseleave', () => { ring.style.scale = '1'; ring.style.opacity = '0.6'; });
+    });
   }
-  animateCursor();
-  document.querySelectorAll('a, button, .service-card, .review-card').forEach(el => {
-    el.addEventListener('mouseenter', () => { ring.style.transform = 'translate(-50%,-50%) scale(1.8)'; ring.style.opacity = '0.3'; });
-    el.addEventListener('mouseleave', () => { ring.style.transform = 'translate(-50%,-50%) scale(1)'; ring.style.opacity = '0.6'; });
-  });
 
   // NAV SCROLL
   const navbar = document.getElementById('navbar');
